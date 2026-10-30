@@ -1,0 +1,39 @@
+{{ define "main" }}
+  {{ if eq .RelPermalink (site.GetPage "/works").RelPermalink }}
+    <h1 class="visually-hidden">Works</h1>
+    <div class="panels">
+      {{ range .Sections.ByWeight }}
+        {{/* Each category chooses its own cover by work slug. */}}
+        {{ $cover := .GetPage .Params.cover }}
+        <a class="panel" href="{{ .RelPermalink }}">
+          {{ with $cover }}
+            {{ partial "picture.html" (dict "img" (partial "work-media.html" .) "op" "fill" "spec" "1000x1600" "alt" "" "class" "panel__img" "loading" "eager") }}
+          {{ end }}
+          <span class="panel__title">{{ .Title }}</span>
+        </a>
+      {{ end }}
+    </div>
+  {{ else }}
+    <div class="page">
+      <h1 class="page-title">{{ .Title }}</h1>
+      <ul class="grid{{ if eq .File.Dir "works/multimedia/" }} grid--video{{ end }}" role="list">
+        {{ range $i, $work := .RegularPages.ByWeight }}
+          <li>
+            <a class="card" href="{{ .RelPermalink }}">
+              <span class="card__media">
+                {{ $loading := "lazy" }}{{ if lt $i 3 }}{{ $loading = "eager" }}{{ end }}
+                {{/* The visible title names the link, so the thumbnail is decorative. */}}
+                {{ partial "picture.html" (dict "img" (partial "work-media.html" .) "op" "fit" "spec" "800x800" "alt" "" "class" "card__img" "loading" $loading) }}
+                {{ with .Resources.GetMatch "video.mp4" }}
+                  <span class="card__play" aria-hidden="true"><svg viewBox="0 0 24 24" width="28" height="28"><path fill="currentColor" d="M8 4v16l13-8z"/></svg></span>
+                {{ end }}
+              </span>
+              <span class="card__title">{{ .Title }}</span>
+              {{ with .Params.year }}<span class="card__year">{{ . }}</span>{{ end }}
+            </a>
+          </li>
+        {{ end }}
+      </ul>
+    </div>
+  {{ end }}
+{{ end }}

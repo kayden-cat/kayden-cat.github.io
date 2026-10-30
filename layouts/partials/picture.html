@@ -1,0 +1,16 @@
+{{/* Process only the requested crop, and size both formats from the same source. */}}
+{{ with .img }}
+  {{ $jpeg := false }}
+  {{ $webp := false }}
+  {{ if eq $.op "fill" }}
+    {{ $jpeg = .Fill (printf "%s Center jpg q82" $.spec) }}
+    {{ $webp = .Fill (printf "%s Center webp q82" $.spec) }}
+  {{ else }}
+    {{ $jpeg = .Fit (printf "%s jpg q82" $.spec) }}
+    {{ $webp = .Fit (printf "%s webp q82" $.spec) }}
+  {{ end }}
+  <picture>
+    <source type="image/webp" srcset="{{ $webp.RelPermalink }}">
+    <img class="{{ $.class }}" src="{{ $jpeg.RelPermalink }}" width="{{ $jpeg.Width }}" height="{{ $jpeg.Height }}" alt="{{ $.alt }}" loading="{{ $.loading | default "lazy" }}" decoding="async"{{ if $.priority }} fetchpriority="high"{{ end }}>
+  </picture>
+{{ end }}

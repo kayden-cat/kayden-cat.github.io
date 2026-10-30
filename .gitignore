@@ -1,0 +1,17 @@
+# Build output
+public/
+resources/_gen/
+.hugo_build.lock
+.DS_Store
+
+# Local-only files (never published)
+.archive/
+.artifacts/
+RULES.md
+AGENTS.md
+DESIGN.md
+docs/
+scripts/setup-identity.sh
+scripts/check-identity.sh
+scripts/go-live.sh
+scripts/gh.sh

@@ -1,0 +1,31 @@
+# Placeholder for local builds. On GitHub, the deploy workflow passes the real
+# site URL with `--baseURL`, so this value never needs editing.
+baseURL = "https://example.github.io/"
+locale = "en-us"
+title = "Ohyun Kwon"
+disableKinds = ["taxonomy", "term", "RSS", "sitemap"]
+
+# Shared contact and footer details.
+[params]
+  email = "ohyunkwon0320@gmail.com"
+  resume = "/ohyun-kwon-resume.pdf"
+  copyrightYear = "2026"
+
+# Default image processing settings.
+[imaging]
+  resampleFilter = "Lanczos"
+  [imaging.jpeg]
+    quality = 82
+  [imaging.webp]
+    quality = 82
+  [imaging.avif]
+    quality = 82
+
+# Do not render raw HTML from Markdown.
+[markup.goldmark.renderer]
+  unsafe = false
+
+# Keep the student's punctuation exactly as written: no automatic curly
+# quotes/apostrophes, dashes, or ellipses (content must stay verbatim).
+[markup.goldmark.extensions.typographer]
+  disable = true

@@ -1,0 +1,9 @@
+<header class="site-header">
+  <a class="site-header__name" href="{{ site.Home.RelPermalink }}">{{ site.Title }}</a>
+  <button class="menu-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-nav"><span class="menu-toggle__bar"></span><span class="menu-toggle__bar"></span><span class="menu-toggle__bar"></span></button>
+  <nav class="nav" id="site-nav" aria-label="Main"><ul class="nav__list">
+    <li class="nav__item nav__item--has-sub"><a class="nav__link" href="{{ (site.GetPage "/works").RelPermalink }}"{{ if eq .Section "works" }} aria-current="page"{{ end }}>Works</a>
+      <ul class="nav__sub">{{ range (site.GetPage "/works").Sections.ByWeight }}<li><a class="nav__sublink" href="{{ .RelPermalink }}">{{ .Title }}</a></li>{{ end }}</ul>
+    </li><li class="nav__item"><a class="nav__link" href="{{ (site.GetPage "/about").RelPermalink }}"{{ if eq .RelPermalink (site.GetPage "/about").RelPermalink }} aria-current="page"{{ end }}>About</a></li>
+  </ul></nav>
+</header>

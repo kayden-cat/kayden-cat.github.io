@@ -1,0 +1,1 @@
+{{/* Video works use their poster as the display image. */}}{{ $img := .Resources.GetMatch "image.*" }}{{ if not $img }}{{ $img = .Resources.GetMatch "poster.jpg" }}{{ end }}{{ return $img }}

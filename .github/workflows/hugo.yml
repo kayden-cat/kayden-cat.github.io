@@ -1,0 +1,108 @@
+# Build the Hugo site and deploy it to GitHub Pages on pushes to main.
+# In repository Settings → Pages, set Source to "GitHub Actions".
+# To upgrade Hugo, change HUGO_VERSION and keep it in sync with local `hugo version`.
+# Based on https://gohugo.io/host-and-deploy/deploy-to-github-pages/
+name: Build and deploy
+
+env:
+  HUGO_VERSION: 0.169.0
+  TZ: Asia/Seoul
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Get the site and its full history for Hugo's Git information.
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          lfs: false
+      # Get the Pages base URL used to build correct links.
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v6
+      # Keep downloaded tools in the runner's local directory.
+      - name: Create a local tools directory
+        run: |
+          mkdir -p "${HOME}/.local"
+      # Install the pinned Hugo version and add it to the runner's PATH.
+      - name: Install Hugo
+        run: |
+          echo "Installing Hugo ${HUGO_VERSION}..."
+          curl -sfL --output-dir "${{ runner.temp }}" -O "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_${HUGO_VERSION}_linux-amd64.tar.gz"
+          mkdir "${HOME}/.local/hugo"
+          tar -C "${HOME}/.local/hugo" -xf "${{ runner.temp }}/hugo_${HUGO_VERSION}_linux-amd64.tar.gz"
+          echo "${HOME}/.local/hugo" >> "${GITHUB_PATH}"
+      # Record the installed version to help diagnose build failures.
+      - name: Log tool versions
+        run: hugo version
+      # Preserve readable non-ASCII file paths in Git output.
+      - name: Configure Git
+        run: |
+          git config --global core.quotepath false
+      # Ensure history is complete if the checkout is shallow.
+      - name: Fetch full Git history
+        run: |
+          if [[ $(git rev-parse --is-shallow-repository) == true ]]; then
+            git fetch --unshallow
+          fi
+      # Reuse cached Hugo resources to speed up later builds.
+      - name: Cache restore
+        id: cache-restore
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ runner.temp }}/.cache/hugo
+          key: hugo-${{ github.run_id }}
+          restore-keys: hugo-
+      # Generate the site with the URL supplied by GitHub Pages.
+      - name: Build
+        run: |
+          echo "Building the project..."
+          hugo build \
+            --gc \
+            --minify \
+            --baseURL "${{ steps.pages.outputs.base_url }}/" \
+            --cacheDir "${{ runner.temp }}/.cache/hugo"
+      # Save the updated resource cache for a future run.
+      - name: Cache save
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ runner.temp }}/.cache/hugo
+          key: ${{ steps.cache-restore.outputs.cache-primary-key }}
+      # Package only the generated public site for deployment.
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          include-hidden-files: false
+          path: ./public
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      # Publish the uploaded artifact to the Pages environment.
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

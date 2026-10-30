@@ -1,0 +1,13 @@
+{{ define "main" }}
+{{/* Iterate categories and works in their editorial weight order. */}}
+{{ $items := slice }}{{ $first := false }}
+{{ range (site.GetPage "/works").Sections.ByWeight }}{{ range .RegularPages.ByWeight }}
+  {{ $work := . }}{{ $img := partial "work-media.html" . }}{{ with $img }}
+    {{ $jpg := .Fit "2000x2000 jpg q82" }}{{ $webp := .Fit "2000x2000 webp q82" }}{{ $video := ne ($work.Resources.GetMatch "video.mp4") nil }}
+    {{ $items = $items | append (dict "href" $work.RelPermalink "title" $work.Title "year" ($work.Params.year | default "") "video" $video "webp" $webp.RelPermalink "jpg" $jpg.RelPermalink "w" $jpg.Width "h" $jpg.Height) }}
+    {{ if not $first }}{{ $first = dict "work" $work "img" . "video" $video }}{{ end }}
+  {{ end }}
+{{ end }}{{ end }}
+{{ with $first }}<figure class="home-art"><a class="home-art__link" href="{{ .work.RelPermalink }}">{{ partial "picture.html" (dict "img" .img "op" "fit" "spec" "2000x2000" "alt" .work.Title "class" "home-art__img" "loading" "eager" "priority" true) }}</a><figcaption class="home-art__caption">{{ .work.Title }}{{ with .work.Params.year }}, {{ . }}{{ end }}{{ if .video }} — video{{ end }}</figcaption></figure>{{ end }}
+<script type="application/json" id="home-works">{{ $items | jsonify | safeJS }}</script>
+{{ end }}

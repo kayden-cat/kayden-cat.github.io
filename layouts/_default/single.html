@@ -1,0 +1,69 @@
+{{ define "main" }}
+  {{ if eq .RelPermalink (site.GetPage "/about").RelPermalink }}
+    <div class="page about">
+      <h1 class="visually-hidden">About</h1>
+      <section class="about__profile" aria-labelledby="about-me">
+        {{ with site.GetPage (printf "/works/%s" .Params.profile_work) }}
+          {{ partial "picture.html" (dict "img" (partial "work-media.html" .) "op" "fill" "spec" "800x1000" "alt" "Ohyun Kwon" "class" "about__img" "loading" "eager") }}
+        {{ end }}
+        <h2 id="about-me">About Me</h2>
+        <div class="about__text">{{ .Content }}</div>
+        <a class="btn" href="{{ site.Params.resume | relURL }}" download>Download Resume</a>
+      </section>
+      <section class="about__ec" aria-labelledby="ec-heading">
+        <h2 id="ec-heading">{{ hugo.Data.ec.heading }}</h2>
+        {{ range hugo.Data.ec.activities }}
+          <article class="ec__item">
+            <p class="ec__cat">{{ .category }}</p>
+            <h3 class="ec__org">{{ .organization }}</h3>
+            <p class="ec__meta">{{ .grades }} ({{ .timing }}) · {{ .hours }}{{ if .continue }} · Will continue{{ end }}</p>
+            <p class="ec__desc">{{ .description }}</p>
+          </article>
+        {{ end }}
+      </section>
+    </div>
+  {{ else }}
+    {{ $video := .Resources.GetMatch "video.mp4" }}
+    {{ $img := partial "work-media.html" . }}
+    <article class="page work{{ if $video }} work--video{{ end }}">
+      <a class="back-link" href="{{ .CurrentSection.RelPermalink }}">← {{ .CurrentSection.Title }}</a>
+      <div class="work__layout">
+        <div class="work__media">
+          {{ if $video }}
+            {{/* A missing poster must not prevent the video from rendering. */}}
+            <video class="work__video" controls playsinline preload="metadata"{{ with $img }}{{ $poster := .Fit "2000x2000 jpg q82" }} poster="{{ $poster.RelPermalink }}" width="{{ $poster.Width }}" height="{{ $poster.Height }}"{{ end }}>
+              <source src="{{ $video.RelPermalink }}" type="video/mp4">Your browser cannot play this video.
+            </video>
+          {{ else }}
+            {{ with $img }}
+              <a href="{{ .RelPermalink }}" target="_blank" rel="noopener" aria-label="Open full-size image of {{ $.Title }} (new tab)">
+                {{ partial "picture.html" (dict "img" . "op" "fit" "spec" "2000x2000" "alt" $.Title "class" "work__img" "loading" "eager") }}
+              </a>
+            {{ end }}
+          {{ end }}
+        </div>
+        <div class="work__info">
+          <h1 class="work__title">{{ .Title }}</h1>
+          {{ if or .Params.year .Params.medium .Params.dimensions }}
+            <p class="work__meta">{{ with .Params.year }}<span>{{ . }}</span>{{ end }}{{ with .Params.medium }}<span>{{ . }}</span>{{ end }}{{ with .Params.dimensions }}<span>{{ . }}</span>{{ end }}</p>
+          {{ end }}
+          {{ with .Content }}<div class="work__desc">{{ . }}</div>{{ end }}
+        </div>
+      </div>
+      {{/* Index the sorted collection explicitly so navigation never wraps or reverses. */}}
+      {{ $pages := .CurrentSection.RegularPages.ByWeight }}
+      {{ $index := 0 }}
+      {{ range $i, $page := $pages }}
+        {{ if eq $page.RelPermalink $.RelPermalink }}{{ $index = $i }}{{ end }}
+      {{ end }}
+      <nav class="pager" aria-label="More works">
+        {{ if gt $index 0 }}
+          {{ with index $pages (sub $index 1) }}<a class="pager__prev" href="{{ .RelPermalink }}" rel="prev"><span class="pager__label">Previous</span>← {{ .Title }}</a>{{ end }}
+        {{ else }}<span></span>{{ end }}
+        {{ if lt (add $index 1) (len $pages) }}
+          {{ with index $pages (add $index 1) }}<a class="pager__next" href="{{ .RelPermalink }}" rel="next"><span class="pager__label">Next</span>{{ .Title }} →</a>{{ end }}
+        {{ else }}<span></span>{{ end }}
+      </nav>
+    </article>
+  {{ end }}
+{{ end }}
